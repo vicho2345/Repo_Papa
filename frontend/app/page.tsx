@@ -3,6 +3,49 @@
 import { useEffect, useState, useCallback } from 'react'
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+const PASSWORD = 'ronald2026'
+
+function LoginGate({ onAuth }: { onAuth: () => void }) {
+  const [input, setInput] = useState('')
+  const [error, setError] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (input === PASSWORD) {
+      sessionStorage.setItem('auth', '1')
+      onAuth()
+    } else {
+      setError(true)
+      setInput('')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm space-y-4">
+        <h1 className="text-lg font-bold text-gray-900 text-center">Agente Empleo Ronald</h1>
+        <p className="text-sm text-gray-400 text-center">Ingresa la contraseña para continuar</p>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="password"
+            value={input}
+            onChange={e => { setInput(e.target.value); setError(false) }}
+            placeholder="Contraseña"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+          {error && <p className="text-xs text-red-500 text-center">Contraseña incorrecta</p>}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 const LINKEDIN_URL =
   'https://www.linkedin.com/jobs/search/?keywords=jefe+construccion+electrica+subestaciones&location=Chile&f_TPR=r604800'
@@ -38,8 +81,13 @@ function formatDate(iso: string) {
 }
 
 export default function Dashboard() {
+  const [authed, setAuthed] = useState(false)
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('auth') === '1') setAuthed(true)
+  }, [])
   const [scanning, setScanning] = useState(false)
   const [adapting, setAdapting] = useState<Set<number>>(new Set())
   const [done, setDone] = useState<Set<number>>(new Set())
@@ -103,6 +151,8 @@ export default function Dashboard() {
       setScanning(false)
     }
   }
+
+  if (!authed) return <LoginGate onAuth={() => setAuthed(true)} />
 
   return (
     <div className="min-h-screen bg-gray-50">
